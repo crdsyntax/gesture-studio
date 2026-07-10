@@ -19,6 +19,8 @@ pub struct GestureService {
     pub actions: ActionEngine,
     pub trainer: GestureTrainer,
     pub event_tx: Sender<AppEvent>,
+    pub last_detection: Option<crate::models::HandDetection>,
+    pub last_normalized: Option<crate::models::NormalizedLandmarks>,
 }
 
 impl GestureService {
@@ -34,6 +36,8 @@ impl GestureService {
             actions: ActionEngine::new(),
             trainer: GestureTrainer::new(event_tx.clone()),
             event_tx,
+            last_detection: None,
+            last_normalized: None,
         }
     }
 

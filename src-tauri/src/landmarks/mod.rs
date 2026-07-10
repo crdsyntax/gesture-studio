@@ -70,7 +70,7 @@ impl LandmarkNormalizer {
     }
 
     fn smooth(
-        &self,
+        &mut self,
         landmarks: &[LandmarkPoint],
         hand_idx: usize,
     ) -> Vec<LandmarkPoint> {
@@ -81,7 +81,7 @@ impl LandmarkNormalizer {
             .cloned()
             .unwrap_or_else(|| landmarks.to_vec());
 
-        landmarks
+        let smoothed: Vec<LandmarkPoint> = landmarks
             .iter()
             .zip(previous.iter())
             .map(|(current, prev)| LandmarkPoint {
@@ -89,6 +89,12 @@ impl LandmarkNormalizer {
                 y: alpha * current.y + (1.0 - alpha) * prev.y,
                 z: alpha * current.z + (1.0 - alpha) * prev.z,
             })
-            .collect()
+            .collect();
+
+        if self.previous_landmarks.len() <= hand_idx {
+            self.previous_landmarks.resize(hand_idx + 1, Vec::new());
+        }
+        self.previous_landmarks[hand_idx] = smoothed.clone();
+        smoothed
     }
 }

@@ -88,6 +88,7 @@ pub fn run() {
             trainer::commands::capture_training_sample,
             trainer::commands::finish_training,
             storage::commands::get_stats,
+            vision::commands::submit_hand_frame,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Gesture Studio");

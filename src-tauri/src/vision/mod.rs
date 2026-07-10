@@ -1,3 +1,5 @@
+pub mod commands;
+
 use crate::app::error::AppError;
 use crate::models::{HandDetection, HandType, LandmarkPoint};
 use std::time::Instant;

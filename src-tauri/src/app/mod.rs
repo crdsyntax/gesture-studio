@@ -27,30 +27,15 @@ impl EventProcessor {
                     AppEvent::Error { message, source } => {
                         error!(source = %source, "{}", message);
                     }
-                    AppEvent::NewFrame { frame } => {
-                        let svc = service.lock().unwrap();
-                        match svc.vision.detect_hands(&frame.data) {
-                            Ok(detections) if !detections.is_empty() => {
-                                for detection in &detections {
-                                    let _ = svc.event_tx
-                                        .send(AppEvent::HandDetected { detection: detection.clone() });
-                                }
-                            }
-                            Ok(_) => {
-                                let _ = svc.event_tx.send(AppEvent::HandsLost);
-                            }
-                            Err(e) => {
-                                let _ = svc.event_tx.send(AppEvent::Error {
-                                    message: e.to_string(),
-                                    source: "vision".to_string(),
-                                });
-                            }
-                        }
+                    AppEvent::NewFrame { .. } => {
+                        // Hand detection runs in the frontend (MediaPipe) and is submitted
+                        // via submit_hand_frame IPC to avoid stub vision and queue flooding.
                     }
                     AppEvent::HandDetected { detection } => {
                         let mut svc = service.lock().unwrap();
                         let normalized = svc.landmarks.normalize(&[detection.clone()]);
                         for nl in normalized {
+                            svc.last_normalized = Some(nl.clone());
                             let _ = svc.event_tx
                                 .send(AppEvent::LandmarksNormalized { landmarks: nl });
                         }

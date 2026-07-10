@@ -28,32 +28,25 @@ pub fn capture_training_sample(
     state: State<AppState>,
 ) -> Result<u32, AppError> {
     let mut svc = state.service.lock().unwrap();
+
+    let landmarks = svc
+        .last_normalized
+        .clone()
+        .ok_or_else(|| AppError::Training("No hand detected — show your hand to the camera".to_string()))?;
+
+    let detection = svc.last_detection.clone().unwrap_or(HandDetection {
+        hand_id: landmarks.hand_id,
+        confidence: 0.0,
+        landmarks: landmarks.landmarks.clone(),
+        handedness: HandType::Right,
+    });
+
     let sequence = GestureSequence {
         gesture_id: Uuid::nil(),
         frames: vec![GestureFrame {
             timestamp: chrono::Utc::now(),
-            landmarks: NormalizedLandmarks {
-                hand_id: 0,
-                landmarks: (0..21)
-                    .map(|i| LandmarkPoint {
-                        x: (i as f32) * 0.05,
-                        y: (i as f32) * 0.03,
-                        z: (i as f32) * 0.01,
-                    })
-                    .collect(),
-                wrist: LandmarkPoint { x: 0.0, y: 0.0, z: 0.0 },
-                thumb_tip: LandmarkPoint { x: 0.2, y: 0.1, z: 0.0 },
-                index_tip: LandmarkPoint { x: 0.3, y: 0.15, z: 0.0 },
-                middle_tip: LandmarkPoint { x: 0.35, y: 0.2, z: 0.0 },
-                ring_tip: LandmarkPoint { x: 0.3, y: 0.25, z: 0.0 },
-                pinky_tip: LandmarkPoint { x: 0.25, y: 0.3, z: 0.0 },
-            },
-            detection: HandDetection {
-                hand_id: 0,
-                confidence: 0.9,
-                landmarks: vec![],
-                handedness: HandType::Right,
-            },
+            landmarks,
+            detection,
         }],
     };
     svc.trainer.add_sample(sequence);
